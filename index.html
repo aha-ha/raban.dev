@@ -3,9 +3,214 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>raban.dev</title>
+    <title>Document</title>
+    <script src="../lib/jquery-3.3.1.min.js"></script>
+    <script src="../lib/jquery.terminal.min.js"></script>
+    <link rel="stylesheet" href="../lib/jquery.terminal.min.css"/>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+        #terminal {
+            height: 100%;
+        }
+    </style>
 </head>
 <body>
-    <p>Nothing to see here yet</p>
+    <div id="terminal"></div>
+    <script src="frames.js"></script>
+    <script>
+        const files = [
+            '.',
+            '..',
+            '.env',
+            'index.html',
+            '404.html',
+            
+        ];
+
+        let animationTimeout = null;
+        let terminal;
+        let username = 'user';
+
+        $('#terminal').terminal(
+            function(input, term) {
+                terminal = term;
+                const parts = input.trim().split(/\s+/);
+                const cmd = parts[0];
+                const args = parts.slice(1);
+
+                switch(cmd) {
+                    case 'help':
+                        fetch('help.txt')
+                            .then(response => response.text())
+                            .then(text => term.echo(text))
+                            .catch(() => term.error('Could not load help.txt'));
+                        break;
+
+                    case 'ls':
+                        term.echo(files.join('    '));
+                        break;
+
+                    case 'echo':
+                        term.echo(args.join(' '));
+                        break;
+
+                    case 'chuser':
+                        if (!args[0]) {
+                            term.error('Usage: chuser <username>');
+                            break;
+                        }
+                        
+                        if (args[0] === 'god') {
+                            term.error('User "god" does not exist');
+                            break;
+                        }
+                        
+                        if (args[0] === 'root') {
+                            term.push(function(password) {
+                                this.pop();
+                                if (password === 'securepass123') {
+                                    username = args[0];
+                                    term.echo(`Username changed to: ${args[0]}`);
+                                    term.set_prompt(`[${args[0]}@raban.dev /]$ `);
+                                } else {
+                                    term.error('Authentication failed');
+                                }
+                            }, {
+                                prompt: 'Password: '
+                            });
+                        } else {
+                            username = args[0];
+                            term.echo(`Username changed to: ${args[0]}`);
+                            term.set_prompt(`[${args[0]}@raban.dev /]$ `);
+                        }
+                        break;
+
+                    case 'cat':
+                        if (!args[0]) {
+                            term.error('Usage: cat <filename>');
+                            break;
+                        }
+                        
+                        if (args[0] === '.env') {
+                            if (typeof frames === 'undefined' || !Array.isArray(frames)) {
+                                term.error('Could not load .env');
+                                break;
+                            }
+                            
+                            let frameIndex = 0;
+                            
+                            const playFrame = () => {
+                                term.clear();
+                                term.echo(frames[frameIndex]);
+                                frameIndex = (frameIndex + 1) % frames.length;
+                                animationTimeout = setTimeout(playFrame, 70);
+                            };
+                            
+                            playFrame();
+                            break;
+                        }
+                        
+                        if (args[0] === '.' || args[0] === '..') {
+                            term.error(`cat: ${args[0]}: Is a directory`);
+                            break;
+                        }
+                        
+                        if (files.includes(args[0])) {
+                            fetch(args[0])
+                                .then(response => response.text())
+                                .then(text => term.echo(text))
+                                .catch(() => term.error(`Could not load ${args[0]}`));
+                        } else {
+                            term.error(`cat: ${args[0]}: No such file or directory`);
+                        }
+                        break;
+
+                    case 'open':
+                        if (!args[0]) {
+                            term.error('Usage: open <file|url>');
+                            break;
+                        }
+                        
+                        if (args[0] === '.env') {
+                            if (typeof frames === 'undefined' || !Array.isArray(frames)) {
+                                term.error('Could not load .env');
+                                break;
+                            }
+                            
+                            let frameIndex = 0;
+                            
+                            const playFrame = () => {
+                                term.clear();
+                                term.echo(frames[frameIndex]);
+                                frameIndex = (frameIndex + 1) % frames.length;
+                                animationTimeout = setTimeout(playFrame, 70);
+                            };
+                            
+                            playFrame();
+                            break;
+                        }
+                        
+                        let urlToOpen;
+                        if (files.includes(args[0])) {
+                            urlToOpen = args[0];
+                        } else if (args[0].startsWith('http://') || args[0].startsWith('https://')) {
+                            urlToOpen = args[0];
+                        } else {
+                            term.error(`open: ${args[0]}: No such file or URL`);
+                            break;
+                        }
+                        
+                        window.open(urlToOpen, '_blank');
+                        term.echo(`Opening ${urlToOpen} in a new tab`);
+                        break;
+
+                    default:
+                        if (input.trim() !== '') {
+                            term.error(`Unknown command: ${cmd}`);
+                        }
+                }
+            },
+            {
+                greetings: `
+
+                     █████                                 █████                     
+                    ░░███                                 ░░███                      
+ ████████   ██████   ░███████   ██████   ████████       ███████   ██████  █████ █████
+░░███░░███ ░░░░░███  ░███░░███ ░░░░░███ ░░███░░███     ███░░███  ███░░███░░███ ░░███ 
+ ░███ ░░░   ███████  ░███ ░███  ███████  ░███ ░███    ░███ ░███ ░███████  ░███  ░███ 
+ ░███      ███░░███  ░███ ░███ ███░░███  ░███ ░███    ░███ ░███ ░███░░░   ░░███ ███  
+ █████    ░░████████ ████████ ░░████████ ████ █████ ██░░████████░░██████   ░░█████   
+░░░░░      ░░░░░░░░ ░░░░░░░░   ░░░░░░░░ ░░░░ ░░░░░ ░░  ░░░░░░░░  ░░░░░░     ░░░░░    
+
+
+Enter "help" for a list of available commands.
+                `,
+                name: 'console',
+                prompt: '[user@raban.dev /]$ '
+            }
+        );
+        
+        $(document).on('keydown', function(e) {
+            if (e.ctrlKey && (e.key === 'c' || e.key === 'C')) {
+                if (animationTimeout) {
+                    e.preventDefault();
+                    clearTimeout(animationTimeout);
+                    animationTimeout = null;
+                    if (terminal) {
+                        terminal.echo('^C');
+                    }
+                }
+            }
+        });
+    </script>
 </body>
 </html>
+

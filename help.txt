@@ -1,0 +1,7 @@
+Available commands:
+- help              Show this help text
+- ls                Displays files in the current directory, similar to ls -a on bash
+- cat <filename>    Displays the contents of a specific file
+- clear             Clears the terminal output
+- echo <text>       Displays the given argument
+- chuser <name>     Change the username displayed in the prompt
