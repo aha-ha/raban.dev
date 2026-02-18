@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Console</title>
     <script src="../lib/jquery-3.3.1.min.js"></script>
     <script src="../lib/jquery.terminal.min.js"></script>
     <link rel="stylesheet" href="../lib/jquery.terminal.min.css"/>
@@ -68,8 +68,9 @@
                             break;
                         }
                         
-                        if (args[0] === 'god') {
-                            term.error('User "god" does not exist');
+                        const restrictedUsers = ["god", "bielefeld"];
+                        if (restrictedUsers.includes(args[0].toLowerCase())) {
+                            term.error(`User "${args[0]}" does not exist`);
                             break;
                         }
                         
